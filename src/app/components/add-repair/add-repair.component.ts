@@ -1,9 +1,11 @@
 import {Component, OnInit, Input} from '@angular/core';
-import {Subject, Observable} from "rxjs";
-import {SearchService} from "../../services/search.service";
-import {Repair} from "../../models/repair";
-import {Transaction} from "../../models/transaction";
-import {TransactionService} from "../../services/transaction.service";
+import {Subject} from 'rxjs/Subject';
+import {Observable} from 'rxjs/Observable';
+import {SearchService} from '../../services/search.service';
+import {RepairItem} from '../../models/repairItem';
+import {Transaction} from '../../models/transaction';
+import {TransactionService} from '../../services/transaction.service';
+import {Repair} from '../../models/repair';
 
 @Component({
   selector: 'app-add-repair',

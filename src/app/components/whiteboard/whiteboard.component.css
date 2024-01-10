@@ -1,0 +1,20 @@
+/* Thicker hr element for the table styling */
+hr.thick {
+    border-top: 3px solid lightgray;
+    opacity: 0.5;
+    padding: 0px 0px 0px 0px;
+    margin: 10px 0px 10px 0px;
+}
+
+.padded-container {
+    padding: 0% 10% 0% 10%
+}
+
+/* Extracted from the bootstrap source. It's the value for a table-danger background color */
+.bg-light-red {
+    background-color: #f8d7daff
+}
+
+.table-row-hover:hover {
+    background-color: rgba(0,0,0,.075);
+}

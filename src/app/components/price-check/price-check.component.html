@@ -1,0 +1,110 @@
+<button
+  #scanTrigger
+  hidden
+  type="button"
+  class="btn btn-outline-primary"
+  data-toggle="modal"
+  data-dismiss="modal"
+  data-target="#priceCheckScanModal"
+>
+  FAKE BUTTON
+</button>
+<button
+  #priceCheckTrigger
+  hidden
+  type="button"
+  class="btn btn-outline-primary"
+  data-toggle="modal"
+  data-dismiss="modal"
+  data-target="#priceCheckModal"
+>
+  FAKE BUTTON
+</button>
+
+<!--UPC scan trigger -->
+<div
+  class="modal"
+  #priceCheckScanModal
+  id="priceCheckScanModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="scanModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- Price Check modal-->
+      <app-item-details-form
+        #itemModal
+        *ngIf="viewItemFromUPC"
+        id="itemModal"
+        [mode]="itemModalMode"
+        [item]="priceCheckItem"
+        (newItem)="displayQBPForm($event)"
+        (closeAll)="closeAndResetAll($event)"
+      ></app-item-details-form>
+      <div *ngIf="!viewItemFromUPC">
+        <div class="modal-header">
+          <h5 class="modal-title" id="scanModalTitle">
+            Scan Item to Price Check
+          </h5>
+        </div>
+        <div class="modal-body">
+          <label for="scanInput" hidden>Scan Input</label>
+          <input
+            autocomplete="off"
+            #scanInput
+            id="scanInput"
+            [formControl]="scanData"
+            type="text"
+            maxlength="20"
+            class="form-control"
+            (keyup.enter)="addByUPC()"
+          />
+          <div
+            [hidden]="!searchingForUPC"
+            role="alert"
+            class="alert alert-secondary load-msg"
+          >
+            <div class="loader"></div>
+            <small class="loading-text">searching for UPC . . .</small>
+          </div>
+          <div
+            class="alert alert-warning"
+            role="alert"
+            [hidden]="!(scanData.invalid && scanData.errors.unexpectedError)"
+          >
+            unexpected error...
+          </div>
+          <div
+            class="alert alert-warning"
+            role="alert"
+            [hidden]="!(scanData.invalid && scanData.errors.badUPC)"
+          >
+            <small>UPC not found.</small>
+            <small style="margin-right: 5px" *ngIf="isAdmin | async">
+              Would you like to create an item?
+              <div style="float: right">
+                <button
+                  style="font-size: 0.75rem; margin-right: 10px"
+                  class="btn btn-sm btn-outline-warning"
+                  (click)="scanToCreateItem()"
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  class="close btn-sm"
+                  data-dismiss="alert"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

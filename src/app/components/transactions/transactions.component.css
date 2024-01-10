@@ -2,6 +2,24 @@
   cursor: pointer;
 }
 
+.nav-tabs {
+  font-size: .9rem;
+}
+
+.nav-link {
+  padding: .5rem;
+  color: #495057;
+}
+
 .transaction-tr {
   cursor: pointer;
+}
+
+.filter-group {
+  margin-top: 1rem;
+  margin-left: 1rem;
+}
+
+.filter {
+  margin-left: 2rem;
 }

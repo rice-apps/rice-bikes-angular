@@ -1,8 +1,279 @@
-<input [(ngModel)]="searchFieldValue" type="text" class="form-control" placeholder="Add items..." #searchBox (keyup)="search(searchBox.value)">
-<div *ngIf="itemResults" class="list-group search-dropdown" style="position: absolute; z-index: 1;">
-  <a class="list-group-item list-group-item-action"
-     *ngFor="let item of itemResults | async"
-     (click)="addItem(item)">
-    {{item.name}}
-  </a>
+<!-- Hidden buttons, useful to trigger modal from typescript -->
+<button
+  #searchTrigger
+  hidden
+  type="button"
+  class="btn btn-outline-primary"
+  data-toggle="modal"
+  data-target="#itemSearchModal"
+>
+  FAKE BUTTON
+</button>
+<button
+  #scanTrigger
+  hidden
+  type="button"
+  class="btn btn-outline-primary"
+  data-toggle="modal"
+  data-target="#scanModal"
+>
+  FAKE BUTTON
+</button>
+
+<!--UPC scan trigger -->
+<div
+  class="modal"
+  #scanModal
+  id="scanModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="scanModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div [hidden]="createItemFromUPC">
+        <div class="modal-header">
+          <h5 class="modal-title" id="scanModalTitle">Scan Item UPC</h5>
+        </div>
+        <div class="modal-body">
+          <label for="scanInput" hidden>Scan Input</label>
+          <input
+            autocomplete="off"
+            #scanInput
+            id="scanInput"
+            [formControl]="scanData"
+            type="text"
+            maxlength="20"
+            class="form-control"
+            (keyup.enter)="addByUPC()"
+          />
+          <div [hidden]="!searchingForUPC" class="load-msg">
+            <div class="loader"></div>
+            <p class="loading-text">searching for UPC . . .</p>
+          </div>
+          <div
+            class="alert alert-warning"
+            role="alert"
+            [hidden]="!(scanData.invalid && scanData.errors.unexpectedError)"
+          >
+            unexpected error...
+          </div>
+          <div
+            class="alert alert-warning"
+            role="alert"
+            [hidden]="!(scanData.invalid && scanData.errors.badUPC)"
+          >
+            <small>UPC not found.</small>
+            <small style="margin-right: 5px" *ngIf="isAdmin | async">
+              Would you like to create an item?
+              <div style="float: right">
+                <button
+                  style="font-size: 0.75rem; margin-right: 10px"
+                  class="btn btn-sm btn-outline-warning"
+                  (click)="scanToCreateItem()"
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  class="close btn-sm"
+                  data-dismiss="alert"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll" *ngIf="isAdmin | async">
+        <app-item-details-form
+          #itemModal
+          *ngIf="createItemFromUPC"
+          id="itemModal"
+          [mode]=0
+          [upc]="lastUPC"
+          [item]="qbpItem"
+          (newItem)="addItem($event)"
+          (closeAll)="closeAndResetAll($event)"
+        ></app-item-details-form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Search/Add Item Modal (only admins can add items)-->
+<div
+  class="modal fade"
+  id="itemSearchModal"
+  #itemSearchModal
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="itemSearchModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-scrollable modal-xl">
+    <div class="modal-content">
+      <nav
+        *ngIf="isAdmin | async"
+        aria-label="Navigate Between Adding and Searching for Items"
+      >
+        <div class="btn-group">
+          <button
+            class="btn"
+            #searchButton
+            [class.btn-primary]="isActive('search')"
+            [class.btn-outline-secondary]="isActive('create')"
+            (click)="setActive('search')"
+          >
+            Search
+          </button>
+          <button
+            class="btn"
+            [class.btn-primary]="isActive('create')"
+            [class.btn-outline-secondary]="isActive('search')"
+            (click)="setActive('create')"
+          >
+            Create
+          </button>
+        </div>
+      </nav>
+
+      <div class="scroll" [hidden]="addDialog" id="itemSearchDialog">
+        <div class="modal-header">
+          <h5 class="modal-title">Add Item</h5>
+          <button
+            #itemSearchClose
+            type="button"
+            id="itemSearchClose"
+            class="close"
+            (click)="closeAndResetAll(null)"
+            data-dismiss="modal"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col">
+              <!-- Form column-->
+              <form autocomplete="off" [formGroup]="itemForm">
+                <!-- first row of form elements-->
+                <div class="form-row">
+                  <div class="form-group col-3">
+                    <label for="nameInput">Name</label>
+                    <input
+                      #nameInput
+                      type="text"
+                      class="form-control"
+                      id="nameInput"
+                      formControlName="name"
+                    />
+                  </div>
+                  <div class="form-group col-2">
+                    <label for="brandSelect">Brand</label>
+                    <select
+                      class="form-control"
+                      id="brandSelect"
+                      formControlName="brand"
+                    >
+                      <option value="">Any</option>
+                      <option *ngFor="let brand of brands | async">
+                        {{ brand }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="form-group col-2">
+                    <label for="category1Select">Category 1</label>
+                    <select
+                      class="form-control"
+                      id="category1Select"
+                      formControlName="category_1"
+                      (change)="onCat1Change($event)"
+                    >
+                      <option value="">Any</option>
+                      <option *ngFor="let category of categories | async">
+                        {{ category }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="form-group col-2">
+                    <label for="category1Select">Category 2</label>
+                    <select
+                      class="form-control"
+                      id="category2Select"
+                      formControlName="category_2"
+                      (change)="onCat2Change($event)"
+                    >
+                      <option value="">Any</option>
+                      <option *ngFor="let category of categories2">
+                        {{ category }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="form-group col-2">
+                    <label for="category1Select">Category 3</label>
+                    <select
+                      class="form-control"
+                      id="category3Select"
+                      formControlName="category_3"
+                    >
+                      <option value="">Any</option>
+                      <option *ngFor="let category of categories3">
+                        {{ category }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <!-- Result list-->
+            <table
+              class="table table-hover"
+              *ngIf="itemResults | async as items"
+            >
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Brand</th>
+                  <th scope="col">Stock</th>
+                  <th *ngIf="employee" scope="col">Wholesale</th>
+                  <th scope="col">Price</th>
+                </tr>
+              </thead>
+              <tbody *ngIf="items.length > 0">
+                <tr *ngFor="let item of items" (click)="selectItem(item)">
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.brand }}</td>
+                  <td>{{ item.in_stock }}</td>
+                  <td *ngIf="employee">${{ item.wholesale_cost }}</td>
+                  <td>${{ item.standard_price }}</td>
+                </tr>
+              </tbody>
+              <tbody *ngIf="items.length == 0">
+                <tr>
+                  <th colspan="4">No Results Found</th>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll" *ngIf="isAdmin | async">
+        <app-item-details-form
+          [mode]=0
+          (newItem)="addItem($event)"
+          [hidden]="!addDialog"
+          [close]="close"
+          (closeAll)="closeAndResetAll($event)"
+        >
+        </app-item-details-form>
+      </div>
+    </div>
+  </div>
 </div>

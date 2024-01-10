@@ -12,8 +12,10 @@
         Are you sure you want to finish the transaction? This cannot be undone!
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
-        <button (click)="finish()" class="btn btn-success">Finish</button>
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal"
+          [disabled]="emailingReceipt">Close</button>
+        <button *ngIf="!emailingReceipt" (click)="finish()" class="btn btn-success">Finish</button>
+        <button *ngIf="emailingReceipt" disabled = "true" class="btn btn-success"><span class="fa fa-cog loader"></span>Sending Email</button>
       </div>
     </div>
   </div>
@@ -22,8 +24,7 @@
 <div class="container mb-4">
   <div class="card mb-2" style="width: 75%; margin: 0 auto;">
     <div #price class="card-body text-center">
-      <h1 *ngIf="!isEdit" (click)="isEdit = true" style="font-size: 100px">${{ transaction.total_cost }}</h1>
-      <input *ngIf="isEdit"  (keydown.escape)="isEdit = false" (keydown.enter)="isEdit = false" [(ngModel)]="transaction.total_cost" class="form-control form-control-lg" type=number style="font-size: 100px;width: 200px; height: 300px">
+      <h1 style="font-size: 100px">${{ transaction?.total_cost }}</h1>
     </div>
   </div>
 
@@ -35,7 +36,7 @@
         </div>
         <div class="card-body">
           <ul class="list-group">
-            <li *ngFor="let repair of transaction.repairs" class="list-group-item">
+            <li *ngFor="let repair of transaction?.repairs" class="list-group-item">
               {{repair.repair.name}}
             </li>
           </ul>
@@ -50,8 +51,8 @@
         </div>
         <div class="card-body">
           <ul class="list-group">
-            <li *ngFor="let item of transaction.items" class="list-group-item">
-              {{item.name}}
+            <li *ngFor="let item of transaction?.items" class="list-group-item">
+              {{item.item?.name || item.name_DEPRECATED}}
             </li>
           </ul>
         </div>

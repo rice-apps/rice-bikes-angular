@@ -1,13 +1,21 @@
-import { RouterModule, Routes } from "@angular/router";
-import { NgModule } from "@angular/core";
-import { TransactionsComponent } from "./components/transactions/transactions.component";
-import { TransactionDetailComponent } from "./components/transactions/transaction-detail/transaction-detail.component";
-import { NewTransactionComponent } from "./components/new-transaction/new-transaction.component";
-import { AuthGuard } from "./guards/auth.guard";
-import { LoginComponent } from "./components/login/login.component";
-import {AuthComponent} from "./components/auth/auth.component";
-import {AdminUsersComponent} from "./components/admin-users/admin-users.component";
-import {CheckoutComponent} from "./components/transactions/transaction-detail/checkout/checkout.component";
+import { RouterModule, Routes } from '@angular/router';
+import { NgModule } from '@angular/core';
+import { TransactionsComponent } from './components/transactions/transactions.component';
+import { TransactionDetailComponent } from './components/transactions/transaction-detail/transaction-detail.component';
+import { NewCustomerTransactionComponent } from './components/new-customer-transaction/new-customer-transaction.component';
+import { NewBikeTransactionComponent } from './components/new-bike-transaction/new-bike-transaction.component';
+import { AuthGuard } from './guards/auth.guard';
+import { LoginComponent } from './components/login/login.component';
+import {AuthComponent} from './components/auth/auth.component';
+import {AdminUsersComponent} from './components/admin-users/admin-users.component';
+import {CheckoutComponent} from './components/transactions/transaction-detail/checkout/checkout.component';
+import {AdminRepairsComponent} from './components/admin-repairs/admin-repairs.component';
+import {AdminItemsComponent} from './components/admin-items/admin-items.component';
+import {OrdersComponent} from './components/orders/orders.component';
+import {NewOrderComponent} from './components/orders/new-order/new-order.component';
+import {OrderDetailComponent} from './components/orders/order-detail/order-detail.component';
+import {AnalyticsComponent} from './components/analytics/analytics.component';
+import {WhiteboardComponent} from './components/whiteboard/whiteboard.component';
 
 const routes: Routes = [
   {
@@ -33,7 +41,17 @@ const routes: Routes = [
 
       {
         path: 'new',
-        component: NewTransactionComponent
+        children: [
+          {
+            path: '',
+            component: NewCustomerTransactionComponent,
+            pathMatch: 'full'
+          },
+          {
+            path: 'retrospec',
+            component: NewBikeTransactionComponent
+          }
+        ]
       },
 
       {
@@ -66,10 +84,45 @@ const routes: Routes = [
       {
         path: 'users',
         component: AdminUsersComponent
+      },
+      {
+        path: 'repairs',
+        component: AdminRepairsComponent
+      },
+      {
+        path: 'items',
+        component: AdminItemsComponent
+      },
+      {
+        path: 'analytics',
+        component: AnalyticsComponent
+      }
+    ]
+  },
+
+  {
+    path: 'orders',
+    canActivate: [AuthGuard],
+    children: [
+      {
+        path: '',
+        component: OrdersComponent,
+        pathMatch: 'full'
+      },
+      {
+        path: 'new',
+        component: NewOrderComponent
+      },
+      {
+        path: 'whiteboard',
+        component: WhiteboardComponent
+      },
+      {
+        path: ':_id',
+        component: OrderDetailComponent
       }
     ]
   }
-
 ];
 
 @NgModule({

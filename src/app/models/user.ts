@@ -1,5 +1,8 @@
 export class User {
   _id: String;
   username: String;
-  admin: boolean;
+  firstname: String;
+  lastname: String;
+  roles: Array<String>;
+  active: Boolean;
 }

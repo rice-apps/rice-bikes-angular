@@ -1,9 +1,14 @@
+<!-- Hidden buttons, useful to trigger modal from typescript -->
+<app-price-check #priceCheckComponent></app-price-check>
+
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container">
-    <a class="navbar-brand" href="#">
+    <a class="navbar-brand" routerLink="/transactions">
       <img src="/assets/img/rice-bikes_white.png" width="80" height="80" class="d-inline-block align-top" alt="">
     </a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
@@ -11,21 +16,23 @@
 
       <!-- Search bar -->
       <!--<app-search-transaction *ngIf="loggedIn | async"></app-search-transaction>-->
-
       <div class="navbar-nav ml-auto mr-2">
         <li *ngIf="isAdmin | async" class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
             Admin
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
             <a class="dropdown-item" [routerLink]="['/admin/users']">Edit users</a>
-            <a class="dropdown-item" href="#">Edit parts</a>
-            <a class="dropdown-item" href="#">Edit repairs</a>
+            <a class="dropdown-item" [routerLink]="['admin/items']">Edit items</a>
+            <a class="dropdown-item" [routerLink]="['admin/repairs']">Edit repairs</a>
+            <a class="dropdown-item" [routerLink]="['admin/analytics']">Download Analytics</a>
+            <!-- <a class="dropdown-item" [routerLink]="['/orders']">Orders</a> -->
           </div>
         </li>
+        <button *ngIf="loggedIn | async" (click)="logout()" class="btn btn-outline-secondary">Logout</button>
+        <a *ngIf="!(loggedIn | async)" [attr.href]="authUrl" class="btn btn-outline-secondary">Login</a>
       </div>
-      <button *ngIf="loggedIn | async" (click)="logout()" class="btn btn-outline-secondary">Logout</button>
-      <a *ngIf="!(loggedIn | async)" [attr.href]="authUrl" class="btn btn-outline-secondary">Login</a>
     </div>
   </div>
 </nav>
@@ -33,17 +40,57 @@
 
 
 <div *ngIf="loggedIn | async" class="container mt-3 mb-3">
-  <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown">
-    New transaction
-  </button>
-  <div class="dropdown-menu">
-    <h6 class="dropdown-header">Choose type</h6>
-    <div class="dropdown-divider"></div>
-    <a class="dropdown-item" [routerLink]="['/transactions/new']" [queryParams]="{t: 'inpatient'}">Inpatient</a>
-    <div class="dropdown-divider"></div>
-    <a class="dropdown-item" [routerLink]="['/transactions/new']" [queryParams]="{t: 'outpatient'}">Outpatient</a>
-    <div class="dropdown-divider"></div>
-    <a class="dropdown-item" [routerLink]="['/transactions/new']" [queryParams]="{t: 'merch'}">Merchandise</a>
+  <div class="row">
+    <div class="col">
+      <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton"
+        data-toggle="dropdown">
+        New transaction
+      </button>
+      <div class="dropdown-menu">
+        <h6 class="dropdown-header">Choose type</h6>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" [routerLink]="['/transactions/new']" [queryParams]="{t: 'inpatient'}">Inpatient</a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" [routerLink]="['/transactions/new']" [queryParams]="{t: 'outpatient'}">Outpatient</a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" [routerLink]="['/transactions/new']" [queryParams]="{t: 'merch'}">Merchandise</a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" [routerLink]="['/transactions/new/retrospec']">Retrospec</a>
+      </div>
+      <button [hidden]="!viewingTransactions()" class="btn btn-outline-secondary" type="button"
+        [routerLink]="['/orders/whiteboard']">
+        Whiteboard
+      </button>
+      <button [hidden]="viewingTransactions()" class="btn btn-outline-secondary" type="button"
+        [routerLink]="['/transactions']">
+        Transactions
+      </button>
+      <button  class="btn btn-outline-info" type="button" (click)="triggerPriceCheck()">
+        <i class="fa fa-barcode"></i>
+        Price Check
+      </button>
+    </div>
+    <div class="col-7 text-right">
+        <!-- Display count of incomplete bikes, and completed ones waiting on pickup -->
+        <h5>
+          <span class="badge badge-primary" [ngPlural]="incompleteInpatientCount">
+            <ng-template ngPluralCase="=0">No Incomplete Bikes</ng-template>
+            <ng-template ngPluralCase="=1">{{incompleteInpatientCount}} Incomplete Bike</ng-template>
+            <ng-template ngPluralCase="other">{{incompleteInpatientCount}} Incomplete Bikes</ng-template>
+          </span>
+          <span class="badge badge-success" [ngPlural]="incompleteWaitingPickupCount">
+            <ng-template ngPluralCase="=0">No Bikes Awaiting Pickup</ng-template>
+            <ng-template ngPluralCase="=1">{{incompleteWaitingPickupCount}} Bike Awaiting Pickup</ng-template>
+            <ng-template ngPluralCase="other">{{incompleteWaitingPickupCount}} Bikes Awaiting Pickup</ng-template>
+          </span>
+          <span class="badge badge-retrospec" [ngPlural]="waitingSafetyCheckCount">
+            <ng-template ngPluralCase="=0">No Bikes Awaiting Safety Check</ng-template>
+            <ng-template ngPluralCase="=1">{{waitingSafetyCheckCount}} Bike Awaiting Safety Check</ng-template>
+            <ng-template ngPluralCase="other">{{waitingSafetyCheckCount}} Bikes Awaiting Safety Check</ng-template>
+          </span>
+        </h5>
+        <app-user-tracker></app-user-tracker>
+    </div>
   </div>
   <!--<button class="btn btn-outline-secondary">New refurb</button>-->
 </div>

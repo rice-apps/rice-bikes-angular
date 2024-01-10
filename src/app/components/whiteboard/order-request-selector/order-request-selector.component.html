@@ -1,0 +1,138 @@
+<button #orderRequestModalButton hidden data-toggle="modal" data-target="#orderReqSelectorModal">HIDDEN: Launch Order
+  Request Selection Modal</button>
+
+<!-- Modal -->
+<div class="modal fade" id="orderReqSelectorModal" tabindex="-1" role="dialog"
+  aria-labelledby="orderReqSelectorModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" [hidden]="createMode" id="orderReqSelectorModalTitle">Select Whiteboard Entry</h5>
+        <h5 class="modal-title" [hidden]="!createMode" id="orderReqSelectorModalTitleAlt">Create Whiteboard Entry</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close" (click)="disableCreateMode()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div [hidden]="createMode">
+          <!--Order Request Selection Mode Content-->
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let request of (activeOrderRequests | async)" (click)="selectOrderRequest(request)">
+                <td>{{request._id}}</td>
+                <td>{{request.request}}</td>
+              </tr>
+            </tbody>
+          </table>
+          <!-- Switches Dialog to create order request mode -->
+          <button class="btn btn-block btn-success" (click)="createMode = true">Create New
+            Entry</button>
+        </div>
+        <div [hidden]="!createMode">
+          <p>Select an item or enter a description of the part request</p>
+          <!--New Order Request Form: Shown in Create Order Request Mode-->
+          <form [formGroup]="stagedOrderRequestForm">
+            <div class="form-group row">
+              <div class="col">
+                <div class="input-group">
+                  <input [value]="item && item.name" class="form-control" readonly />
+                  <div class="input-group-append">
+                    <button type="button" class="btn btn-secondary" (click)="triggerItemSearch()">
+                      <i class="fa fa-list"></i>
+                      Find Item
+                    </button>
+                    <button (click)="removeItem()" [disabled]="!item" class="btn btn-outline-danger"><i class="fas fa-trash"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group row">
+              <div class="col-4">
+                <label for="requestInput">Description*</label>
+              </div>
+              <div class="col">
+                <input class="form-control" id="requestInput" formControlName="request" />
+              </div>
+            </div>
+            <div class="form-group row">
+              <div class="col-4">
+                <label for="category1Select">Category 1*</label>
+              </div>
+              <div class="col">
+                <select class="form-control" id="category1Select" formControlName="category_1"
+                  (change)="onCat1Change($event)">
+                  <option value="">Any</option>
+                  <option *ngFor="let category of categories | async">
+                    {{ category }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group row">
+              <div class="col-4">
+                <label for="category1Select">Category 2</label>
+              </div>
+              <div class="col">
+                <select class="form-control" id="category2Select" formControlName="category_2"
+                  (change)="onCat2Change($event)">
+                  <option value="">Any</option>
+                  <option *ngFor="let category of categories2">
+                    {{ category }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group row">
+              <div class="col-4">
+                <label for="category1Select">Category 3</label>
+              </div>
+              <div class="col">
+                <select class="form-control" id="category3Select" formControlName="category_3">
+                  <option value="">Any</option>
+                  <option *ngFor="let category of categories3">
+                    {{ category }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="row my-2">
+              <div class="col-4">
+                <label for="transactionInput">Transaction</label>
+              </div>
+              <div class="col">
+                <input *ngIf="preset_transaction == null"
+                  [ngClass]="{'form-control': true,
+                                  'is-invalid': stagedOrderRequestForm.get('transactionID').invalid,
+                                  'is-valid': stagedOrderRequestForm.get('transactionID').valid && stagedOrderRequestForm.get('transactionID').dirty}"
+                  formControlName="transactionID" id="transactionInput" />
+                <!--Readonly input if preset_transaction was set -->
+                <input *ngIf="preset_transaction != null" readonly class="form-control" formControlName="transactionID"
+                  id="transactionInput">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-4">
+                <label for="quantityInput">Quantity*</label>
+              </div>
+              <div class="col">
+                <input class="form-control" type="number" min="1" formControlName="quantity" id="quantityInput" />
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal-footer" [hidden]="!createMode">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal"
+          (click)="disableCreateMode()">Cancel</button>
+        <button type="button" class="btn btn-primary" [disabled]="this.stagedOrderRequestForm.invalid"
+          (click)="createOrderRequest()">Create Request</button>
+      </div>
+    </div>
+  </div>
+</div>
